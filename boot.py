@@ -1,8 +1,20 @@
 ## connect to wifi at boot time.
 import network
+from connectsim import SimClass
+
+SSID = "PandaHome"
+PWD = "123456789"
+
 
 
 def do_connect(ssid, pwd):
+    """
+    To Connect to A Wifi Network
+    Please Use Connect do_connect Method wih
+    params : ssid -- Your Wifi SSID/Name
+             pwd  -- Your Wifi Password
+
+    """
     sta_if = network.WLAN(network.STA_IF)
     if not sta_if.isconnected():
         print('connecting to network...')
@@ -11,15 +23,15 @@ def do_connect(ssid, pwd):
         while not sta_if.isconnected():
             pass
     print('network config:', sta_if.ifconfig())
- 
-# # This file is executed on every boot (including wake-boot from deepsleep)
-# #import esp
-# #esp.osdebug(None)
+    
+    return sta_if.isconnected()
  
 
 
 
 def wifiAP():
+    """ To Create a Wifi HotSpot use this method
+    """
     ssid = 'MicroPython-AP'
     password = '123456789'
 
@@ -32,15 +44,20 @@ def wifiAP():
 
     print('Connection successful')
     print(ap.ifconfig())
+    return ap.isconnected()
 
 
+def connectSIM():
+    sim = SimClass()
+    sim.activateSimModule()
+    status = sim.connectGPRS()
+    
+    return status
+    
 
+# # do_connect(SSID, PWD)
 
-# # Attempt to connect to WiFi network
-# do_connect('Pandahome ff 2', 'Panda4875')
-# do_connect('iOT DEPT', 'tksggn@1234')
-
-wifiAP()
+# wifiAP()
 
 import webrepl
 webrepl.start()
