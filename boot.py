@@ -49,7 +49,7 @@ def wifiAP():
 
 def connectSIM():
     sim = SimClass()
-    sim.activateSimModule()
+    sim.activateSimModule(tx_pin,rx_pin)
     status = sim.connectGPRS()
     
     return status
