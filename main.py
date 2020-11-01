@@ -3,27 +3,12 @@
 import utime
 from util import create_mqtt_client, get_telemetry_topic, get_c2d_topic, parse_connection
 import ujson
+from machine import Pin
 
-
-
-utime.sleep(2)
-from connectsim import SimClass,UseSIM
-sim_conn = SimClass()
-activate = sim_conn.activateSimModule()
-connectGPRS = sim_conn.connectGPRS()
-
-
-# utime.sleep(3)
-# disconnect = sim_conn.disconnectGPRS()
-# utime.sleep(3)
-# sim_conn = SimClass()
-# activate = sim_conn.activateSimModule()
-# connectGPRS = sim_conn.connectGPRS()
-
-call = UseSIM()
-makecall = call.callMobile()
-
-print(makecall)
+start_motor = Pin(7, Pin.OUT)
+stop_motor = Pin(8, Pin.OUT)
+tx_pin = 4 #sim module connect to ESP tx pin no
+rx_pin = 2 #sim module connect to ESP rx pin no
 
 HOST_NAME = "HostName"
 SHARED_ACCESS_KEY_NAME = "SharedAccessKeyName"
@@ -52,7 +37,6 @@ sas_token_str = "SharedAccessSignature sr=AgroHub.azure-devices.net%2Fdevices%2F
 
 ## Create username following the below format '<HOSTNAME>/<DEVICE_ID>'
 username = hostname + '/' + device_id + '/?api-version=2018-06-30'
-print("username:", username)
 
 
 ## Create UMQTT ROBUST or UMQTT SIMPLE CLIENT
@@ -62,9 +46,8 @@ print("connecting")
 mqtt_client.reconnect()
 
 def callback_handler(topic, message_receive):
-    print("-------------CallBack----------------")
-    # Handle Direct Method Topic-----------
-    if topic.startswith(b'$iothub/methods/POST/start/'):
+    # Handle All subscriped topics including Direct method -----------
+    if topic.startswith(b'$iothub/methods/POST/'):
         print("Received message with topic", topic)
         topic = topic.decode('utf-8').split('/')
         methodName = topic[3]
@@ -74,7 +57,19 @@ def callback_handler(topic, message_receive):
         response_topic = "$iothub/methods/res/200/"+rid
         if methodName =='start':
             print("Starting the Application")
+            start_motor.value(1)
+            stop_motor.value(0)
             mqtt_client.publish(topic=response_topic, msg=ujson.dumps("{'Status':'ok'}"))
+        elif methodName == 'stop':
+            print("Stopping the Motor")
+            start_motor.value(0)
+            stop_motor.value(1)
+            mqtt_client.publish(topic=response_topic, msg=ujson.dumps("{'Status':'ok'}"))
+            
+        else:
+            print("The Method name requested is " + methodName +"\n"+"Not Implemented any Action on ESP32 Module to handle Please check your method name")
+            
+            
         print("Payload is ---",msg)
     else:
         #Handle Normal Messages Form Iot HUb
@@ -88,30 +83,29 @@ subscribe_topic = get_c2d_topic(device_id)
 mqtt_client.set_callback(callback_handler)
 mqtt_client.subscribe(topic=subscribe_topic)
 mqtt_client.subscribe(topic="$iothub/methods/POST/#")
-messages = ["Accio", "Aguamenti", "Alarte Ascendare", "Expecto Patronum", "Homenum Revelio", "Priori Incantato", "Revelio", "Rictusempra",  "Nox" , "Stupefy", "Wingardium Leviosa"]
-
 print("Publishing")
 topic = get_telemetry_topic(device_id)
-import random
+
+
+import boot
+SSID = boot.SSID
+PWD = boot.PWD
 while True:
     try:
         msg = mqtt_client.check_msg()
         print("Waiting for commands from Iot HUB")
         utime.sleep(2)
-    except OSError:
-        print("Exception raisedddddd")
-        utime.sleep(2)
-        mqtt_client.reconnect()
-        utime.sleep(2)
-
-    except OSError:
-        print("Exception raisedddddd")
-        utime.sleep(2)
-        mqtt_client.reconnect()
-        utime.sleep(2)
-    except OSError:
-        print("Exception raisedddddd")
-        utime.sleep(2)
-        mqtt_client.reconnect()
-        utime.sleep(2)
+    except:
+        try:
+            
+            status = do_connect(SSID, PWD)
+            if status:
+                print("Wifi Conected")
+        except:
+            status = connectSIM(tx_pin,rx_pin)
+            if status:
+                print("Sim Network Connected")
+      
+                
+            
             
