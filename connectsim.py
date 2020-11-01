@@ -1,96 +1,3 @@
-# import machine
-# import sys
-# import time
-
-
-# try:
-#     import usocket as _socket
-# except:
-#     import _socket
-# try:
-#     import ussl as ssl
-# except:
-#     import ssl
-
-# DEBUG=True
-
-# def logline(str):
-#     if DEBUG:
-#         print(str)
-
-# def log(str):
-#     sys.stdout.write(str)
-
-# def connect():
-#     from machine import UART
-
-#     # GSM_PWR = machine.Pin(4, machine.Pin.OUT)
-#     # GSM_RST = machine.Pin(5, machine.Pin.OUT)
-#     # GSM_MODEM_PWR = machine.Pin(23, machine.Pin.OUT)
-
-#     # GSM_PWR.value(0)
-#     # GSM_RST.value(1)
-#     # GSM_MODEM_PWR.value(1)
-
-#     GSM = UART(1, baudrate=9600, timeout=1000, rx=4, tx=2)
-
-#     GSM_APN = 'portalnmms'
-#     logline('Waiting for AT command response...')
-#     self.atcmd('AT', GSM)
-#     self.atcmd('ATZ', GSM)
-#     time.sleep_ms(500)
-#     self.atcmd('ate0', GSM)
-#     self.atcmd('AT+CPIN?', GSM)
-#     self.atcmd('AT+CREG?', GSM)
-#     self.atcmd('AT+CNMI=0,0,0,0,0', GSM)
-
-#     logline("Connecting to GSM...")
-
-#     self.atcmd('AT+CGDCONT=1,"IP","' + GSM_APN + '"', GSM)
-#     self.atcmd('ATD*99***1#', GSM)
-
-#     return connectGPRS(GSM)
-
-
-# def self.atcmd(cmd, GSM, wait=500, tries=20):
-#     GSM.write(cmd + '\r\n')
-#     time.sleep_ms(wait)
-
-#     for retry in range(tries):
-#         resp = GSM.read()
-#         if resp:
-#             print(resp)
-#             return resp
-#         else:
-#             log('.')
-#             time.sleep_ms(wait)
-#     else:
-#         raise Exception("Modem not responding!")
-
-
-# def connectGPRS(GSM):
-#     import network
-#     GPRS = network.PPP(GSM)
-#     GPRS.active(True)
-#     GPRS.connect()
-
-#     for retry in range(20):
-
-#         ret = GPRS.isconnected()
-
-#         if ret:
-#             break
-#         else:
-#             log('.')
-#             time.sleep_ms(2000)
-#     else:
-#         raise Exception("Modem not responding!")
-
-#     logline(GPRS.ifconfig())
-#     return GPRS
-
-# connect()
-# print("Done")
 DEBUG=True
 
 import network
@@ -98,6 +5,7 @@ import machine
 import sys
 import time
 from machine import UART,Pin
+
 class SimClass:
     def __init__(self):
         try:
@@ -122,17 +30,22 @@ class SimClass:
 
 
 
-    def activateSimModule(self):
-        self.GSM = UART(1, baudrate=9600, timeout=1000, rx=4, tx=2)
-        
-        self.logline('Waiting for AT command response...')
-        self.atcmd('AT')
-        self.atcmd('ATZ')
-        time.sleep_ms(500)
-        self.atcmd('ate0')
-        self.atcmd('AT+CPIN?')
-        self.atcmd('AT+CREG?')
-        self.atcmd('AT+CNMI=0,0,0,0,0')
+    def activateSimModule(self,tx_pin,rx_pin):
+        try:
+            self.GSM = UART(1, baudrate=9600, timeout=1000, rx=rx_pin, tx=tx_pin)
+
+            self.logline('Waiting for AT command response...')
+            self.atcmd('AT')
+            self.atcmd('ATZ')
+            time.sleep_ms(500)
+            self.atcmd('ate0')
+            self.atcmd('AT+CPIN?')
+            self.atcmd('AT+CREG?')
+            self.atcmd('AT+CNMI=0,0,0,0,0')
+        except:
+            print("Not Able to Connect to UART Please check your tx_pin or rx_pin nos")
+            sys.exit()
+            
 
         
         
